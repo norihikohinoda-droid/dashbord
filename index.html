@@ -296,6 +296,53 @@
   .rank-revenue { text-align: right; font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .rank-qty { text-align: right; font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
+  /* chat */
+  .chat-log {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 4px 2px 14px;
+  }
+  .chat-msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .chat-msg-ai { align-self: flex-start; background: var(--surface-sunken); color: var(--text); border-bottom-left-radius: 4px; }
+  .chat-msg-user { align-self: flex-end; background: var(--accent-pine-soft); color: var(--accent-pine); border-bottom-right-radius: 4px; font-weight: 500; }
+  .chat-msg-loading { color: var(--text-faint); font-style: italic; }
+  .chat-msg-error { background: var(--cat-gift-soft); color: var(--cat-gift); }
+  .chat-form { display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .chat-input {
+    flex: 1;
+    font-family: inherit;
+    font-size: 13.5px;
+    padding: 10px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    color: var(--text);
+  }
+  .chat-input:focus { outline: 2px solid var(--accent-pine); outline-offset: 1px; }
+  .chat-send-btn {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 100px;
+    border: 1px solid var(--accent-pine);
+    background: var(--accent-pine);
+    color: var(--surface);
+    white-space: nowrap;
+  }
+  .chat-send-btn:hover { opacity: 0.9; }
+
   footer { font-size: 11.5px; color: var(--text-faint); text-align: center; padding-top: 8px; }
 
   @media (max-width: 760px) {
@@ -395,6 +442,20 @@
       <div class="panel-meta" id="rankMeta">売上金額の高い順</div>
     </div>
     <div class="rank-list" id="rankList"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title"><span class="n">05</span>AIに質問する</div>
+      <div class="panel-meta">FastAPIバックエンド経由でOpenAIに問い合わせます(要ローカル起動)</div>
+    </div>
+    <div class="chat-log" id="chatLog">
+      <div class="chat-msg chat-msg-ai">ダッシュボードについて質問してください。(例: 「2月の売上が伸びた理由は？」)</div>
+    </div>
+    <form class="chat-form" id="chatForm">
+      <input type="text" id="chatInput" class="chat-input" placeholder="質問を入力..." autocomplete="off">
+      <button type="submit" class="chat-send-btn">送信</button>
+    </form>
   </div>
 
   <footer id="footerNote">同じフォルダ内のCSVファイルを読み込んで集計 ・ 上部のフィルターで期間とカテゴリを絞り込めます</footer>
@@ -776,6 +837,52 @@ document.getElementById('resetFilters').addEventListener('click', () => {
   render();
 });
 
+const CHAT_API_BASE = 'http://localhost:8000';
+
+function appendChatMessage(role, text, extraClass) {
+  const log = document.getElementById('chatLog');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + (role === 'user' ? 'chat-msg-user' : 'chat-msg-ai') + (extraClass ? ' ' + extraClass : '');
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+async function sendChatMessage(message) {
+  appendChatMessage('user', message);
+  const loadingEl = appendChatMessage('ai', '考え中...', 'chat-msg-loading');
+  try {
+    const res = await fetch(`${CHAT_API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const data = await res.json().catch(() => ({}));
+    loadingEl.remove();
+    if (!res.ok) {
+      appendChatMessage('ai', `エラー: ${data.detail || ('HTTP ' + res.status)}`, 'chat-msg-error');
+      return;
+    }
+    appendChatMessage('ai', data.answer);
+  } catch (e) {
+    loadingEl.remove();
+    appendChatMessage('ai', `バックエンドに接続できませんでした。FastAPIサーバー(${CHAT_API_BASE})が起動しているか確認してください。`, 'chat-msg-error');
+  }
+}
+
+function setupChat() {
+  document.getElementById('chatForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    sendChatMessage(msg);
+  });
+}
+
+setupChat();
 init();
 </script>
 </body>
