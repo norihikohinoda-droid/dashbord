@@ -1,0 +1,769 @@
+﻿<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コーヒー小売ダッシュボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+  :root {
+    --bg: #F1ECE2;
+    --surface: #FFFFFF;
+    --surface-sunken: #E9E2D4;
+    --border: #DCD3C1;
+    --text: #241C15;
+    --text-muted: #6E6152;
+    --text-faint: #9C8F7C;
+    --accent-pine: #3F6B57;
+    --accent-pine-soft: #3F6B571a;
+    --accent-copper: #BD7F3F;
+    --cat-gift: #BD7F3F;      --cat-gift-soft: #BD7F3F26;
+    --cat-food: #3F6B57;      --cat-food-soft: #3F6B5726;
+    --cat-goods: #4C6B87;     --cat-goods-soft: #4C6B8726;
+    --cat-sub: #7A5568;       --cat-sub-soft: #7A556826;
+    --shadow: 0 1px 2px rgba(36,28,21,0.06), 0 6px 20px rgba(36,28,21,0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1B1611;
+      --surface: #262019;
+      --surface-sunken: #2F2820;
+      --border: #3B3226;
+      --text: #F0E9DE;
+      --text-muted: #B3A48F;
+      --text-faint: #7C7062;
+      --accent-pine: #6FAE8D;
+      --accent-pine-soft: #6FAE8D22;
+      --accent-copper: #E3A868;
+      --cat-gift: #E3A868;   --cat-gift-soft: #E3A86833;
+      --cat-food: #6FAE8D;   --cat-food-soft: #6FAE8D33;
+      --cat-goods: #7FA3C0;  --cat-goods-soft: #7FA3C033;
+      --cat-sub: #C193AC;    --cat-sub-soft: #C193AC33;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1B1611;
+    --surface: #262019;
+    --surface-sunken: #2F2820;
+    --border: #3B3226;
+    --text: #F0E9DE;
+    --text-muted: #B3A48F;
+    --text-faint: #7C7062;
+    --accent-pine: #6FAE8D;
+    --accent-pine-soft: #6FAE8D22;
+    --accent-copper: #E3A868;
+    --cat-gift: #E3A868;   --cat-gift-soft: #E3A86833;
+    --cat-food: #6FAE8D;   --cat-food-soft: #6FAE8D33;
+    --cat-goods: #7FA3C0;  --cat-goods-soft: #7FA3C033;
+    --cat-sub: #C193AC;    --cat-sub-soft: #C193AC33;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-feature-settings: "palt";
+  }
+  h1, h2, .kpi-value { text-wrap: balance; }
+
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 28px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* header */
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .masthead-title {
+    font-family: "Shippori Mincho", serif;
+    font-weight: 600;
+    font-size: clamp(24px, 3vw, 32px);
+    letter-spacing: 0.02em;
+  }
+  .masthead-sub {
+    margin-top: 6px;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+  .period-chip {
+    font-size: 12.5px;
+    color: var(--accent-pine);
+    background: var(--accent-pine-soft);
+    border: 1px solid var(--accent-pine);
+    border-radius: 100px;
+    padding: 6px 14px;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  /* drop bar */
+  .drop-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1.5px dashed var(--border);
+    border-radius: 14px;
+    padding: 14px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .drop-bar-icon { font-size: 16px; color: var(--accent-pine); }
+  .drop-bar-text { flex: 1; }
+  .drop-bar-btn {
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 7px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--accent-pine);
+    background: var(--accent-pine-soft);
+    color: var(--accent-pine);
+    white-space: nowrap;
+  }
+  .drop-bar-btn:hover { background: var(--accent-pine); color: var(--surface); }
+  body.drag-over .drop-bar {
+    border-color: var(--accent-pine);
+    background: var(--accent-pine-soft);
+    color: var(--accent-pine);
+  }
+  body.drag-over::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    border: 3px dashed var(--accent-pine);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* filter panel */
+  .filter-panel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow);
+  }
+  .filter-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .filter-group-label { font-size: 12px; color: var(--text-muted); letter-spacing: 0.04em; white-space: nowrap; }
+  .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 7px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .chip:hover { border-color: var(--accent-pine); color: var(--text); }
+  .chip:focus-visible { outline: 2px solid var(--accent-pine); outline-offset: 2px; }
+  .chip.active { background: var(--accent-pine-soft); border-color: var(--accent-pine); color: var(--accent-pine); font-weight: 700; }
+  .chip.cat.active { background: var(--chip-soft); border-color: var(--chip-color); color: var(--chip-color); font-weight: 700; }
+  .filter-divider { width: 1px; align-self: stretch; background: var(--border); }
+  .reset-btn {
+    margin-left: auto;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .reset-btn:hover { border-color: var(--accent-copper); color: var(--accent-copper); }
+  .filter-summary { font-size: 12px; color: var(--text-faint); width: 100%; order: 99; }
+
+  /* KPI row */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .kpi-label { font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em; }
+  .kpi-value {
+    font-family: "Shippori Mincho", serif;
+    font-size: clamp(20px, 2.4vw, 27px);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
+  }
+  .kpi-value small { font-size: 0.5em; font-weight: 500; color: var(--text-muted); margin-left: 2px; }
+  .kpi-note { font-size: 11.5px; color: var(--text-faint); }
+
+  /* sections */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 26px 28px 22px;
+    box-shadow: var(--shadow);
+  }
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .panel-title { font-size: 16px; font-weight: 700; letter-spacing: 0.01em; }
+  .panel-title .n { color: var(--accent-pine); font-family: "Shippori Mincho", serif; font-weight: 600; margin-right: 6px; }
+  .panel-meta { font-size: 12px; color: var(--text-faint); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  .empty-state { padding: 36px 0; text-align: center; color: var(--text-faint); font-size: 13.5px; }
+
+  /* trend chart */
+  .trend-wrap { width: 100%; overflow-x: auto; }
+  .trend-svg { width: 100%; height: auto; display: block; min-width: 480px; }
+  .grid-line { stroke: var(--border); stroke-width: 1; }
+  .axis-label { fill: var(--text-faint); font-size: 12px; font-family: "Zen Kaku Gothic New", sans-serif; }
+  .month-label { fill: var(--text-muted); font-size: 13px; font-weight: 500; }
+  .value-label { fill: var(--text); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .value-label.peak { fill: var(--accent-copper); }
+  .trend-area { fill: var(--accent-pine); opacity: 0.14; }
+  .trend-line { fill: none; stroke: var(--accent-pine); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+  .trend-point { fill: var(--surface); stroke: var(--accent-pine); stroke-width: 2.5; }
+  .trend-point.peak { stroke: var(--accent-copper); }
+
+  /* horizontal bar lists */
+  .bar-chart { display: flex; flex-direction: column; gap: 12px; }
+  .bar-axis { display: grid; grid-template-columns: 92px 1fr; gap: 12px; font-size: 10.5px; color: var(--text-faint); padding-bottom: 4px; margin-bottom: 2px; }
+  .bar-axis-ticks { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 6px; }
+  .bar-row { display: grid; grid-template-columns: 92px 1fr; gap: 12px; align-items: center; }
+  .bar-row-label { font-size: 13px; color: var(--text-muted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { position: relative; height: 24px; background: var(--surface-sunken); border-radius: 6px; overflow: hidden; }
+  .bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--accent-pine); transition: width .25s ease; }
+  .bar-row-value { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+
+  /* product ranking */
+  .rank-list { display: flex; flex-direction: column; }
+  .rank-header, .rank-row {
+    display: grid;
+    grid-template-columns: 36px 1.4fr 90px 2fr 80px 70px;
+    gap: 14px;
+    align-items: center;
+    padding: 11px 4px;
+  }
+  .rank-header { font-size: 11px; color: var(--text-faint); letter-spacing: 0.04em; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .rank-row { border-bottom: 1px solid var(--border); }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-num { font-family: "Shippori Mincho", serif; font-weight: 600; font-size: 15px; color: var(--text-faint); }
+  .rank-row.top .rank-num { color: var(--accent-copper); }
+  .rank-name { font-size: 14px; font-weight: 500; }
+  .cat-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .rank-bar-track { position: relative; height: 16px; background: var(--surface-sunken); border-radius: 5px; overflow: hidden; }
+  .rank-bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 5px; transition: width .25s ease; }
+  .rank-revenue { text-align: right; font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .rank-qty { text-align: right; font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  footer { font-size: 11.5px; color: var(--text-faint); text-align: center; padding-top: 8px; }
+
+  @media (max-width: 760px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .rank-header, .rank-row { grid-template-columns: 28px 1.2fr 70px 1.4fr 66px; }
+    .rank-header span:nth-child(6), .rank-qty { display: none; }
+    .reset-btn { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="masthead">
+    <div>
+      <div class="masthead-title">売上ダッシュボード</div>
+      <div class="masthead-sub" id="mastheadSub">売上データを読み込み中...</div>
+    </div>
+    <div class="period-chip" id="dataPeriodChip">データ期間: 読み込み中...</div>
+  </div>
+
+  <div class="drop-bar" id="dropBar">
+    <span class="drop-bar-icon">⇩</span>
+    <span class="drop-bar-text" id="dropBarText">CSVファイルをこのページにドラッグ&amp;ドロップすると読み込まれます</span>
+    <button class="drop-bar-btn" id="dropBarBtn" type="button">ファイルを選択</button>
+    <input type="file" id="fileInput" accept=".csv" multiple hidden>
+  </div>
+
+  <div class="filter-panel">
+    <div class="filter-group">
+      <div class="filter-group-label">期間</div>
+      <div class="filter-chips" id="periodFilter">
+        <button class="chip active" data-period="all">全期間</button>
+      </div>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="filter-group">
+      <div class="filter-group-label">カテゴリ</div>
+      <div class="filter-chips" id="categoryFilter">
+        <button class="chip cat active" data-cat="ギフト" style="--chip-color:var(--cat-gift); --chip-soft:var(--cat-gift-soft);">ギフト</button>
+        <button class="chip cat active" data-cat="食品" style="--chip-color:var(--cat-food); --chip-soft:var(--cat-food-soft);">食品</button>
+        <button class="chip cat active" data-cat="雑貨" style="--chip-color:var(--cat-goods); --chip-soft:var(--cat-goods-soft);">雑貨</button>
+        <button class="chip cat active" data-cat="サブスク" style="--chip-color:var(--cat-sub); --chip-soft:var(--cat-sub-soft);">サブスク</button>
+      </div>
+    </div>
+    <button class="reset-btn" id="resetFilters">条件をリセット</button>
+    <div class="filter-summary" id="filterSummary"></div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">合計売上</div>
+      <div class="kpi-value" id="kpiTotal">¥0</div>
+      <div class="kpi-note">選択した期間・カテゴリの合計</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">総販売点数</div>
+      <div class="kpi-value" id="kpiQty">0<small>点</small></div>
+      <div class="kpi-note">選択条件に一致する商品数</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">取引件数</div>
+      <div class="kpi-value" id="kpiCount">0<small>件</small></div>
+      <div class="kpi-note" id="kpiCountNote">1件あたり平均0.0点</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">平均客単価</div>
+      <div class="kpi-value" id="kpiAvg">¥0</div>
+      <div class="kpi-note">売上 ÷ 取引件数</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title"><span class="n">01</span>売上推移</div>
+      <div class="panel-meta" id="trendMeta"></div>
+    </div>
+    <div class="trend-wrap" id="trendChart"></div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title"><span class="n">02</span>カテゴリ別売上</div></div>
+      <div class="bar-chart" id="categoryBars"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title"><span class="n">03</span>地域別売上</div></div>
+      <div class="bar-chart" id="regionBars"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title"><span class="n">04</span>商品別売上ランキング</div>
+      <div class="panel-meta" id="rankMeta">売上金額の高い順</div>
+    </div>
+    <div class="rank-list" id="rankList"></div>
+  </div>
+
+  <footer id="footerNote">同じフォルダ内のCSVファイルを読み込んで集計 ・ 上部のフィルターで期間とカテゴリを絞り込めます</footer>
+
+</div>
+
+<script>
+let DATA = [];
+
+const CATS = ['ギフト','食品','雑貨','サブスク'];
+const CAT_COLOR_VAR = {'ギフト':'--cat-gift','食品':'--cat-food','雑貨':'--cat-goods','サブスク':'--cat-sub'};
+const MONTH_LABEL = {};
+const REGIONS = ['東京','大阪','名古屋','福岡','その他','札幌'];
+
+const productCategory = {};
+
+
+const state = { period: 'all', cats: new Set(CATS) };
+
+function sum(arr, fn) { return arr.reduce((s, x) => s + fn(x), 0); }
+
+function niceCeil(v) {
+  if (v <= 0) return 1000;
+  const exp = Math.floor(Math.log10(v));
+  const base = Math.pow(10, exp);
+  const norm = v / base;
+  let n = 1;
+  if (norm > 5) n = 10; else if (norm > 2) n = 5; else if (norm > 1) n = 2;
+  return n * base;
+}
+function formatYen(v) { return '¥' + Math.round(v).toLocaleString('ja-JP'); }
+function formatAxis(v) { return v >= 10000 ? Math.round(v / 10000).toLocaleString('ja-JP') + '万' : Math.round(v).toLocaleString('ja-JP'); }
+function cssColor(varName) { return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
+
+function filterRows() {
+  return DATA.filter(r => (state.period === 'all' || r.d.startsWith(state.period)) && state.cats.has(r.c));
+}
+
+function updateFilterSummary(rows) {
+  const periodLabel = state.period === 'all' ? '全期間' : MONTH_LABEL[state.period];
+  const catLabel = state.cats.size === CATS.length ? '全カテゴリ' : (state.cats.size === 0 ? 'カテゴリ未選択' : Array.from(state.cats).join('・'));
+  document.getElementById('filterSummary').textContent = `表示中: ${periodLabel} / ${catLabel}（${rows.length}件が対象）`;
+}
+
+function renderKPI(rows) {
+  const total = sum(rows, r => r.a);
+  const qty = sum(rows, r => r.q);
+  const count = rows.length;
+  const avg = count ? Math.round(total / count) : 0;
+  document.getElementById('kpiTotal').textContent = formatYen(total);
+  document.getElementById('kpiQty').innerHTML = qty.toLocaleString('ja-JP') + '<small>点</small>';
+  document.getElementById('kpiCount').innerHTML = count.toLocaleString('ja-JP') + '<small>件</small>';
+  document.getElementById('kpiCountNote').textContent = count ? `1件あたり平均${(qty / count).toFixed(1)}点` : 'データなし';
+  document.getElementById('kpiAvg').textContent = count ? formatYen(avg) : '¥0';
+}
+
+function trendSVG(values, labels, opts) {
+  const W = 800, H = 320, padL = 60, padR = 20, padT = 26, padB = 40;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = values.length;
+  const maxVal = Math.max(...values, 0);
+  const top = niceCeil(maxVal > 0 ? maxVal * 1.15 : 1000);
+  const xAt = i => n <= 1 ? padL + plotW / 2 : padL + plotW * i / (n - 1);
+  const yAt = v => padT + plotH - (v / top) * plotH;
+  const baseY = padT + plotH;
+  const peakIdx = values.indexOf(maxVal);
+  const showLabels = n <= 6;
+
+  const fracs = [0, 0.25, 0.5, 0.75, 1];
+  let grid = '';
+  fracs.forEach(f => {
+    const y = padT + plotH * (1 - f);
+    grid += `<line class="grid-line" x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" />`;
+    grid += `<text class="axis-label" x="${padL - 10}" y="${y + 4}" text-anchor="end">${f === 0 ? '0' : formatAxis(top * f)}</text>`;
+  });
+
+  let linePath = `M${xAt(0)},${yAt(values[0])}`;
+  for (let i = 1; i < n; i++) linePath += ` L${xAt(i)},${yAt(values[i])}`;
+  let areaPath = linePath + ` L${xAt(n - 1)},${baseY} L${xAt(0)},${baseY} Z`;
+
+  let points = '';
+  let xLabels = '';
+  const labelStep = n <= 6 ? 1 : Math.ceil(n / 8);
+  for (let i = 0; i < n; i++) {
+    const isPeak = i === peakIdx && maxVal > 0 && n > 1;
+    const r = showLabels ? (isPeak ? 6 : 5.5) : 3.2;
+    points += `<circle class="trend-point${isPeak ? ' peak' : ''}" cx="${xAt(i)}" cy="${yAt(values[i])}" r="${r}"><title>${labels[i]}: ${formatYen(values[i])}</title></circle>`;
+    if (showLabels) {
+      points += `<text class="value-label${isPeak ? ' peak' : ''}" x="${xAt(i)}" y="${yAt(values[i]) - 14}" text-anchor="middle">${formatYen(values[i])}</text>`;
+    }
+    if (n <= 6 || i % labelStep === 0 || i === n - 1) {
+      xLabels += `<text class="month-label" x="${xAt(i)}" y="${H - 17}" text-anchor="middle" style="font-size:11px;">${labels[i]}</text>`;
+    }
+  }
+
+  return `<svg class="trend-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${grid}
+    <path class="trend-area" d="${areaPath}" />
+    <path class="trend-line" d="${linePath}" />
+    ${points}
+    ${xLabels}
+  </svg>`;
+}
+
+function renderTrend(rows) {
+  const container = document.getElementById('trendChart');
+  const meta = document.getElementById('trendMeta');
+  if (rows.length === 0) {
+    container.innerHTML = '<div class="empty-state">該当するデータがありません</div>';
+    meta.textContent = '';
+    return;
+  }
+  if (state.period === 'all') {
+    const months = Object.keys(MONTH_LABEL);
+    const values = months.map(m => sum(rows.filter(r => r.d.startsWith(m)), r => r.a));
+    const labels = months.map(m => MONTH_LABEL[m]);
+    container.innerHTML = trendSVG(values, labels);
+    const peakIdx = values.indexOf(Math.max(...values));
+    meta.textContent = `${labels[peakIdx]}がピーク（${formatYen(values[peakIdx])}）・単位: 万円`;
+  } else {
+    const monthNum = Number(state.period.split('-')[1]);
+    const daysInMonth = new Date(2026, monthNum, 0).getDate();
+    const values = [], labels = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = state.period + '-' + String(d).padStart(2, '0');
+      values.push(sum(rows.filter(r => r.d === dateStr), r => r.a));
+      labels.push(d + '日');
+    }
+    container.innerHTML = trendSVG(values, labels);
+    meta.textContent = `${MONTH_LABEL[state.period]}の日別売上推移（${daysInMonth}日間）`;
+  }
+}
+
+function renderBarChart(containerId, entries, colorFn) {
+  const container = document.getElementById(containerId);
+  if (entries.length === 0) {
+    container.innerHTML = '<div class="empty-state">該当するデータがありません</div>';
+    return;
+  }
+  const max = Math.max(...entries.map(e => e.value), 1);
+  const top = niceCeil(max * 1.1);
+  let html = `<div class="bar-axis"><span></span><div class="bar-axis-ticks"><span>0</span><span>${formatAxis(top * 0.5)}</span><span>${formatAxis(top)}</span></div></div>`;
+  entries.forEach(e => {
+    const widthPct = (e.value / top * 100).toFixed(1);
+    html += `<div class="bar-row">
+      <div class="bar-row-label">${e.label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${widthPct}%; background:${colorFn(e)};"></div><span class="bar-row-value">${formatYen(e.value)}</span></div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function renderCategoryBars(rows) {
+  const entries = Array.from(state.cats).map(c => ({ label: c, value: sum(rows.filter(r => r.c === c), r => r.a), cat: c }))
+    .sort((a, b) => b.value - a.value);
+  renderBarChart('categoryBars', entries, e => `var(${CAT_COLOR_VAR[e.cat]})`);
+}
+
+function renderRegionBars(rows) {
+  const entries = REGIONS.map(r => ({ label: r, value: sum(rows.filter(x => x.r === r), x => x.a) }))
+    .sort((a, b) => b.value - a.value);
+  renderBarChart('regionBars', entries, () => 'var(--accent-pine)');
+}
+
+function renderRanking(rows) {
+  const container = document.getElementById('rankList');
+  const map = new Map();
+  rows.forEach(r => {
+    if (!map.has(r.p)) map.set(r.p, { revenue: 0, qty: 0 });
+    const e = map.get(r.p);
+    e.revenue += r.a; e.qty += r.q;
+  });
+  const list = Array.from(map.entries()).map(([p, v]) => ({ p, ...v })).sort((a, b) => b.revenue - a.revenue);
+
+  document.getElementById('rankMeta').textContent = list.length ? `売上金額の高い順・全${list.length}商品` : '';
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="rank-header"><span>#</span><span>商品名</span><span>カテゴリ</span><span>売上構成比</span><span>売上金額</span><span>数量</span></div><div class="empty-state">該当するデータがありません</div>';
+    return;
+  }
+
+  const max = list[0].revenue;
+  let html = '<div class="rank-header"><span>#</span><span>商品名</span><span>カテゴリ</span><span>売上構成比</span><span>売上金額</span><span>数量</span></div>';
+  list.forEach((item, i) => {
+    const cat = productCategory[item.p];
+    const widthPct = (item.revenue / max * 100).toFixed(1);
+    html += `<div class="rank-row${i < 2 ? ' top' : ''}">
+      <div class="rank-num">${String(i + 1).padStart(2, '0')}</div>
+      <div class="rank-name">${item.p}</div>
+      <div class="cat-chip"><span class="cat-dot" style="background:var(${CAT_COLOR_VAR[cat]});"></span>${cat}</div>
+      <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${widthPct}%; background:var(${CAT_COLOR_VAR[cat]});"></div></div>
+      <div class="rank-revenue">${formatYen(item.revenue)}</div>
+      <div class="rank-qty">${item.qty}点</div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (lines.length < 2) return [];
+  const header = lines[0].split(',').map(h => h.trim());
+  const col = name => header.indexOf(name);
+  const idx = { d: col('日付'), p: col('商品名'), c: col('カテゴリ'), r: col('地域'), q: col('数量'), u: col('単価'), a: col('売上金額') };
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',');
+    if (cols.length < header.length) continue;
+    rows.push({
+      d: cols[idx.d].trim(), p: cols[idx.p].trim(), c: cols[idx.c].trim(), r: cols[idx.r].trim(),
+      q: parseInt(cols[idx.q], 10), u: parseInt(cols[idx.u], 10), a: parseInt(cols[idx.a], 10)
+    });
+  }
+  return rows;
+}
+
+async function discoverCsvFiles() {
+  const dirHtml = await fetch('./').then(r => r.text());
+  const doc = new DOMParser().parseFromString(dirHtml, 'text/html');
+  return Array.from(doc.querySelectorAll('a'))
+    .map(a => a.getAttribute('href'))
+    .filter(href => href && href.toLowerCase().endsWith('.csv'));
+}
+
+function buildPeriodButtons() {
+  const months = Array.from(new Set(DATA.map(r => r.d.slice(0, 7)))).sort();
+  months.forEach(m => { MONTH_LABEL[m] = Number(m.slice(5, 7)) + '月'; });
+  const container = document.getElementById('periodFilter');
+  let html = '<button class="chip active" data-period="all">全期間</button>';
+  months.forEach(m => { html += `<button class="chip" data-period="${m}">${MONTH_LABEL[m]}</button>`; });
+  container.innerHTML = html;
+}
+
+function formatDateJp(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return `${y}年${m}月${d}日`;
+}
+
+function clearObjKeys(obj) { Object.keys(obj).forEach(k => delete obj[k]); }
+
+function updateHeaderFooter(fileNames) {
+  const dates = DATA.map(r => r.d).sort();
+  document.getElementById('mastheadSub').textContent = DATA.length
+    ? `読み込み済みのCSVを集計 ― 全${DATA.length.toLocaleString('ja-JP')}件の取引記録`
+    : 'まだデータがありません。CSVをドラッグ&ドロップするか「ファイルを選択」で読み込んでください';
+  document.getElementById('dataPeriodChip').textContent = dates.length
+    ? `データ期間: ${formatDateJp(dates[0])} 〜 ${formatDateJp(dates[dates.length - 1])}`
+    : 'データ期間: 未読み込み';
+  document.getElementById('footerNote').textContent = fileNames.length
+    ? `${fileNames.join(' + ')}（${DATA.length}件）を集計して作成 ・ 上部のフィルターで期間とカテゴリを絞り込めます ・ CSVをドラッグ&ドロップすると追加で読み込めます`
+    : 'CSVファイルをこのページにドラッグ&ドロップすると、サーバーなしでそのまま読み込めます';
+  document.getElementById('dropBarText').textContent = fileNames.length
+    ? '読み込み済み ・ さらにCSVをドラッグ&ドロップすると追加されます'
+    : 'CSVファイルをこのページにドラッグ&ドロップすると読み込まれます';
+}
+
+const loadedFiles = new Map();
+
+function rebuildFromLoadedFiles() {
+  const allRows = [];
+  for (const rows of loadedFiles.values()) allRows.push(...rows);
+  allRows.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
+  DATA = allRows;
+  clearObjKeys(productCategory);
+  DATA.forEach(r => { productCategory[r.p] = r.c; });
+  clearObjKeys(MONTH_LABEL);
+  buildPeriodButtons();
+  state.period = 'all';
+  state.cats = new Set(CATS);
+  document.querySelectorAll('#categoryFilter .chip').forEach(c => c.classList.add('active'));
+  updateHeaderFooter(Array.from(loadedFiles.keys()));
+  render();
+}
+
+function isCsvFile(file) { return file.name.toLowerCase().endsWith('.csv'); }
+
+async function handleFiles(fileList) {
+  const files = Array.from(fileList).filter(isCsvFile);
+  if (files.length === 0) return;
+  for (const file of files) {
+    const text = await file.text();
+    loadedFiles.set(file.name, parseCSV(text));
+  }
+  rebuildFromLoadedFiles();
+}
+
+function setupFileInputs() {
+  const fileInput = document.getElementById('fileInput');
+  document.getElementById('dropBarBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) handleFiles(fileInput.files);
+    fileInput.value = '';
+  });
+
+  let dragDepth = 0;
+  document.addEventListener('dragenter', e => {
+    e.preventDefault();
+    dragDepth++;
+    document.body.classList.add('drag-over');
+  });
+  document.addEventListener('dragover', e => { e.preventDefault(); });
+  document.addEventListener('dragleave', e => {
+    e.preventDefault();
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) document.body.classList.remove('drag-over');
+  });
+  document.addEventListener('drop', e => {
+    e.preventDefault();
+    dragDepth = 0;
+    document.body.classList.remove('drag-over');
+    if (e.dataTransfer && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  });
+}
+
+async function init() {
+  setupFileInputs();
+  try {
+    const files = await discoverCsvFiles();
+    for (const href of files) {
+      const text = await fetch(href).then(r => r.text());
+      loadedFiles.set(decodeURIComponent(href), parseCSV(text));
+    }
+  } catch (e) {
+    // file:// で開いている、またはサーバー未経由 ― ドラッグ&ドロップで読み込む
+  }
+  if (loadedFiles.size > 0) {
+    rebuildFromLoadedFiles();
+  } else {
+    updateHeaderFooter([]);
+    render();
+  }
+}
+
+function render() {
+  const rows = filterRows();
+  updateFilterSummary(rows);
+  renderKPI(rows);
+  renderTrend(rows);
+  renderCategoryBars(rows);
+  renderRegionBars(rows);
+  renderRanking(rows);
+}
+
+document.getElementById('periodFilter').addEventListener('click', e => {
+  const btn = e.target.closest('.chip');
+  if (!btn) return;
+  state.period = btn.dataset.period;
+  document.querySelectorAll('#periodFilter .chip').forEach(c => c.classList.toggle('active', c === btn));
+  render();
+});
+
+document.getElementById('categoryFilter').addEventListener('click', e => {
+  const btn = e.target.closest('.chip');
+  if (!btn) return;
+  const cat = btn.dataset.cat;
+  if (state.cats.has(cat)) { state.cats.delete(cat); btn.classList.remove('active'); }
+  else { state.cats.add(cat); btn.classList.add('active'); }
+  render();
+});
+
+document.getElementById('resetFilters').addEventListener('click', () => {
+  state.period = 'all';
+  state.cats = new Set(CATS);
+  document.querySelectorAll('#periodFilter .chip').forEach(c => c.classList.toggle('active', c.dataset.period === 'all'));
+  document.querySelectorAll('#categoryFilter .chip').forEach(c => c.classList.add('active'));
+  render();
+});
+
+init();
+</script>
+</body>
+</html>
